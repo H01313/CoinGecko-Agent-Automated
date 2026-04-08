@@ -8,8 +8,6 @@ from utils.logger import log
 strategy = RSIStrategy()
 trader = PaperTrader()
 
-RUN_ONCE = True  # belangrijk voor testen (GitHub / lokaal)
-
 def run_bot():
     df = get_xrp_data()
     df = strategy.calculate_rsi(df)
@@ -37,16 +35,9 @@ def run_bot():
     log("-" * 40)
 
 
-# LOOP
-while True:
+# 🔥 FIX: GEEN infinite loop meer → 1 run en STOP
+if __name__ == "__main__":
     try:
         run_bot()
-
-        if RUN_ONCE:
-            break
-
-        time.sleep(60)
-
     except Exception as e:
         log(f"FOUT: {e}")
-        time.sleep(60)
