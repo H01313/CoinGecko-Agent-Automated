@@ -1,1 +1,6 @@
-
+name: CoinGecko BTC Trader
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+jobs
