@@ -1,27 +1,12 @@
-name: Paper Trading Bot
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
+name: run-bot
+on: [workflow_dispatch]
 jobs:
-  run-bot:
+  run:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-
-    - name: Setup Python
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v4  # ← v4 ipv v3
+    - uses: actions/setup-python@v5  # ← v5 ipv v4
       with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-
-    - name: Run bot (1 cycle only)
-      run: |
-        python main.py
+        python-version: '3.11'
+    - run: pip install -r requirements.txt pandas requests ta  # ← alle packages!
+    - run: python main.py
