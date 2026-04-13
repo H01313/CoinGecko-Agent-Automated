@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XRP RSI Bot Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --line: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --amber: #f59e0b;
+      --blue: #38bdf8;
+      --violet: #8b5cf6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .hero {
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .hero h1 { margin: 0; font-size: 2rem; }
+    .hero p { margin: 6px 0 0; color: var(--muted); }
+    .pill { border: 1px solid var(--line); background: rgba(255,255,255,.03); padding: 8px 12px; border-radius: 999px; color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .kpis { grid-template-columns: repeat(5, minmax(0,1fr)); margin-bottom: 16px; }
+    .main { grid-template-columns: 2fr 1fr; margin-bottom: 16px; }
+    .bottom { grid-template-columns: 1.4fr 1fr; }
+    .card {
+      background: rgba(17,24,39,.9);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    }
+    .card h2 { margin: 0 0 14px; font-size: 1.05rem; }
+    .label { color: var(--muted); font-size: .84rem; margin-bottom: 8px; }
+    .value { font-size: 1.8rem; font-weight: 800; }
+    .small { color: var(--muted); font-size: .9rem; }
+    .signal { display: inline-flex; padding: 8px 12px; border-radius: 999px; font-weight: 700; }
+    .BUY { background: rgba(34,197,94,.14); color: #86efac; }
+    .SELL { background: rgba(239,68,68,.14); color: #fca5a5; }
+    .HOLD { background: rgba(245,158,11,.14); color: #fcd34d; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid rgba(148,163,184,.14); font-size: .92rem; }
+    th { color: var(--muted); font-weight: 600; }
+    .logbox {
+      background: #020617; border: 1px solid rgba(148,163,184,.16); border-radius: 14px;
+      padding: 14px; height: 320px; overflow: auto; font-family: ui-monospace, SFMono-Regular, monospace; font-size: .84rem; white-space: pre-wrap;
+    }
+    .status-ok { color: #86efac; }
+    .status-warn { color: #fcd34d; }
+    .status-bad { color: #fca5a5; }
+    canvas { width: 100% !important; max-height: 340px; }
+    @media (max-width: 1100px) {
+      .kpis, .main, .bottom { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>XRP RSI Bot Dashboard</h1>
+        <p>Statisch GitHub dashboard voor CoinGecko marktdata, RSI-signalen, paper trading en run/log-overzicht.</p>
+      </div>
+      <div class="pill" id="lastUpdated">Laden...</div>
+    </div>
+
+    <section class="grid kpis">
+      <div class="card"><div class="label">Laatste prijs</div><div class="value" id="price">-</div><div class="small">XRP/USD</div></div>
+      <div class="card"><div class="label">RSI</div><div class="value" id="rsi">-</div><div class="small">Periode 14</div></div>
+      <div class="card"><div class="label">Signaal</div><div class="value"><span id="signal" class="signal HOLD">-</span></div><div class="small">BUY / SELL / HOLD</div></div>
+      <div class="card"><div class="label">Balance</div><div class="value" id="balance">-</div><div class="small">Paper trading</div></div>
+      <div class="card"><div class="label">Succesratio</div><div class="value" id="success">-</div><div class="small">Gesloten trades</div></div>
+    </section>
+
+    <section class="grid main">
+      <div class="card">
+        <h2>Prijsverloop 24 uur</h2>
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Bot status</h2>
+        <div class="label">Positie</div><div class="value" id="position">-</div>
+        <div style="height:16px"></div>
+        <div class="label">Entry price</div><div class="value" id="entryPrice">-</div>
+        <div style="height:16px"></div>
+        <div class="label">Laatste run</div><div class="small" id="runStatus">-</div>
+        <div style="height:16px"></div>
+        <div class="label">Gebruik</div>
+        <div class="small">Gebruik dit dashboard om te zien of de bot marktdata binnenhaalt, welk RSI-signaal nu actief is, of een paper positie open staat en of GitHub Actions gezond draait.</div>
+      </div>
+    </section>
+
+    <section class="grid bottom">
+      <div class="card">
+        <h2>Laatste trades</h2>
+        <table>
+          <thead><tr><th>Tijd</th><th>Side</th><th>Entry</th><th>Exit</th><th>Profit</th><th>Status</th></tr></thead>
+          <tbody id="tradesBody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Log archive</h2>
+        <div class="logbox" id="logArchive">Geen logs geladen.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    async function loadJson(path) {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error(`Kan ${path} niet laden`);
+      return await res.json();
+    }
+
+    function fmtNum(v, digits=2) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return '-';
+      return Number(v).toFixed(digits);
+    }
+
+    function setText(id, value) { document.getElementById(id).textContent = value; }
+
+    function renderTrades(trades) {
+      const body = document.getElementById('tradesBody');
+      body.innerHTML = '';
+      if (!trades || !trades.length) {
+        body.innerHTML = '<tr><td colspan="6" class="small">Nog geen gesloten trades beschikbaar.</td></tr>';
+        return;
+      }
+      trades.slice().reverse().slice(0, 12).forEach(t => {
+        const tr = document.createElement('tr');
+        const profit = Number(t.profit ?? 0);
+        tr.innerHTML = `
+          <td>${t.timestamp || '-'}</td>
+          <td>${t.side || '-'}</td>
+          <td>${t.entry_price ?? '-'}</td>
+          <td>${t.exit_price ?? '-'}</td>
+          <td style="color:${profit >= 0 ? '#86efac' : '#fca5a5'}">${fmtNum(profit, 4)}</td>
+          <td>${profit >= 0 ? 'Win' : 'Loss'}</td>`;
+        body.appendChild(tr);
+      });
+    }
+
+    function renderChart(series) {
+      const labels = series.map(x => new Date(x.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }));
+      const prices = series.map(x => x.price);
+      new Chart(document.getElementById('priceChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: prices,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56,189,248,.12)',
+            fill: true,
+            tension: .25,
+            pointRadius: 0,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#94a3b8', maxTicksLimit: 8 }, grid: { color: 'rgba(148,163,184,.08)' } },
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,.08)' } }
+          }
+        }
+      });
+    }
+
+    async function init() {
+      const snapshot = await loadJson('../data/latest_snapshot.json');
+      const market = await loadJson('../data/market_data.json');
+      const trades = await loadJson('../data/trades.json');
+      const runs = await loadJson('../data/run_history.json');
+      const logs = await loadJson('../data/log_archive.json');
+
+      setText('price', `$${fmtNum(snapshot.price, 4)}`);
+      setText('rsi', fmtNum(snapshot.rsi, 2));
+      setText('balance', `${fmtNum(snapshot.balance, 2)} USDT`);
+      setText('success', `${fmtNum((snapshot.success_ratio || 0) * 100, 2)}%`);
+      setText('position', snapshot.position || 'NONE');
+      setText('entryPrice', snapshot.entry_price ? `$${fmtNum(snapshot.entry_price, 4)}` : '-');
+      setText('lastUpdated', `Laatste update: ${snapshot.generated_at || '-'}`);
+
+      const signalEl = document.getElementById('signal');
+      signalEl.textContent = snapshot.signal || '-';
+      signalEl.className = `signal ${snapshot.signal || 'HOLD'}`;
+
+      const lastRun = runs && runs.length ? runs[runs.length - 1] : null;
+      document.getElementById('runStatus').innerHTML = lastRun
+        ? `<span class="${lastRun.status === 'success' ? 'status-ok' : lastRun.status === 'warning' ? 'status-warn' : 'status-bad'}">${lastRun.status}</span> · ${lastRun.workflow || 'run-bot'} · ${lastRun.timestamp || '-'}`
+        : 'Geen run data';
+
+      renderTrades(trades);
+      renderChart(market.series || []);
+      document.getElementById('logArchive').textContent = (logs.lines || []).slice(-60).join('
+');
+    }
+
+    init().catch(err => {
+      document.getElementById('logArchive').textContent = 'Fout bij laden dashboarddata: ' + err.message;
+    });
+  </script>
+</body>
+</html>
