@@ -1,11 +1,10 @@
 {
-  "generated_at": "2026-04-13T12:00:00Z",
-  "symbol": "XRPUSD",
+  "generated_at": "2026-04-13T17:30:00Z",
   "price": 0.6421,
   "rsi": 54.28,
   "signal": "HOLD",
-  "balance": 1000.0,
-  "success_ratio": 0.0,
-  "position": "NONE",
-  "entry_price": null
+  "balance": 1002.17,
+  "success_ratio": 0.66,
+  "position": "LONG",
+  "entry_price": 0.6314
 }
