@@ -1,0 +1,8 @@
+[
+  {
+    "timestamp": "2026-04-13T12:00:00Z",
+    "workflow": "run-bot",
+    "status": "success",
+    "duration_seconds": 42
+  }
+]
