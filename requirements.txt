@@ -1,6 +1,5 @@
-requests
 pandas
-numpy
+requests
 ta
-python-dotenv
 flask
+python-dotenv
