@@ -188,11 +188,11 @@
     }
 
     async function init() {
-      const snapshot = await loadJson('../data/latest_snapshot.json');
-      const market = await loadJson('../data/market_data.json');
-      const trades = await loadJson('../data/trades.json');
-      const runs = await loadJson('../data/run_history.json');
-      const logs = await loadJson('../data/log_archive.json');
+      const snapshot = await loadJson('data/latest_snapshot.json');
+      const market = await loadJson('data/market_data.json');
+      const trades = await loadJson('data/trades.json');
+      const runs = await loadJson('data/run_history.json');
+      const logs = await loadJson('data/log_archive.json');
 
       setText('price', `$${fmtNum(snapshot.price, 4)}`);
       setText('rsi', fmtNum(snapshot.rsi, 2));
