@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-04-13T09:40:00Z",
+    "side": "LONG",
+    "entry_price": 0.6112,
+    "exit_price": 0.6258,
+    "profit": 0.0146
+  },
+  {
+    "timestamp": "2026-04-13T10:20:00Z",
+    "side": "LONG",
+    "entry_price": 0.6291,
+    "exit_price": 0.6210,
+    "profit": -0.0081
+  }
+]
